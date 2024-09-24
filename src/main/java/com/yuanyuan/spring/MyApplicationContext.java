@@ -3,6 +3,8 @@ package com.yuanyuan.spring;
 
 import java.beans.Introspector;
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
@@ -101,10 +103,20 @@ public class MyApplicationContext {
         Class<?> clazz = bd.getClazz();
         Object bean;
         try {
-            bean = clazz.newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+            bean = clazz.getConstructor().newInstance();
+
+            // 简单的按字段名依赖注入
+            Field[] declaredFields = clazz.getDeclaredFields();
+            for (Field field : declaredFields) {
+                // 如果有 @Autowired 注解，就要进行依赖注入
+                if (field.isAnnotationPresent(Autowired.class)) {
+                    field.setAccessible(true);
+                    // 这里就从 容器中找，看有没有字段名同名的bean，有的话塞进去
+                    field.set(bean, getBean(field.getName()));
+                }
+            }
+
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return bean;

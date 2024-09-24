@@ -17,8 +17,7 @@ public class Main {
         System.out.println(user);
         System.out.println(user2);
 
-
-//        System.out.println("simpleName = " + MyApplicationContext.class.getSimpleName());
-//        System.out.println("Name = " + MyApplicationContext.class.getName());
+        user.test();
+        user.test();
     }
 }
