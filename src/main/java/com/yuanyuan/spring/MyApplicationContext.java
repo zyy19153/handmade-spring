@@ -6,6 +6,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,7 +18,9 @@ public class MyApplicationContext {
 
     private ConcurrentHashMap<String/*beanName*/, Object/*单例对象*/> singleObjects = new ConcurrentHashMap<>();
 
-    public MyApplicationContext(Class<?> configClass) throws ClassNotFoundException {
+    private ArrayList<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
+
+    public MyApplicationContext(Class<?> configClass) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
         this.configClass = configClass;
 
@@ -37,6 +40,9 @@ public class MyApplicationContext {
         if(serviceDirectory.isDirectory()) {
             File[] fileNames = serviceDirectory.listFiles();
 
+            // 其实这里的排列就是按字母顺序升序排列的
+//            Arrays.sort(fileNames, (a, b) -> b.getAbsolutePath().compareTo(a.getAbsolutePath()));
+
             for (File fileName : fileNames) {
                 String javaClassPath = fileName.getAbsolutePath();
                 // 这里就是 service 包下每个类的绝对路径名: D:\JavaSpace\handmade-spring\target\classes\com\yuanyuan\service\Main.class
@@ -49,10 +55,21 @@ public class MyApplicationContext {
                     javaClassPath = javaClassPath.substring(javaClassPath.indexOf("com"), javaClassPath.indexOf(".class"));
                     javaClassPath = javaClassPath.replace("\\", ".");
 
+                    System.out.println("javaClassPath = " + javaClassPath);
+
                     // 到这一步，我们成功获取了 com.yuanyuan.service 包下的所有类，后续的操作都基于此
                     Class<?> clazz = classLoader.loadClass(javaClassPath);
 
                     if (clazz.isAnnotationPresent(Component.class)) {
+
+                        // 对 BeanPostProcessor 处理
+                        // 就是看 clazz 是否是 BeanPostProcessor 的子类或实现类
+                        if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
+                            BeanPostProcessor beanPostProcessor = (BeanPostProcessor) clazz.getConstructor().newInstance();
+                            beanPostProcessors.add(beanPostProcessor);
+                            singleObjects.put(getBeanName(clazz), beanPostProcessor);
+                        }
+
                         // 如果有 @Component 注解，说明容器需要保管它
                         BeanDefinition bd = new BeanDefinition();
                         bd.setClazz(clazz);
@@ -65,10 +82,7 @@ public class MyApplicationContext {
                             bd.setScope("singleton");
                         }
                         // bean 的命名
-                        String beanName = clazz.getDeclaredAnnotation(Component.class).value();
-                        if (beanName == null || beanName.isEmpty()) {
-                            beanName = Introspector.decapitalize(clazz.getSimpleName());
-                        }
+                        String beanName = getBeanName(clazz);
                         beanDefinitionMap.put(beanName, bd);
                     }
 
@@ -79,6 +93,14 @@ public class MyApplicationContext {
                 getBean(beanName);
             }
         }
+    }
+
+    private static String getBeanName(Class<?> clazz) {
+        String beanName = clazz.getDeclaredAnnotation(Component.class).value();
+        if (beanName == null || beanName.isEmpty()) {
+            beanName = Introspector.decapitalize(clazz.getSimpleName());
+        }
+        return beanName;
     }
 
 
@@ -129,6 +151,12 @@ public class MyApplicationContext {
             // 初始化阶段
             if (bean instanceof InitializingBean) {
                 ((InitializingBean) bean).afterPropertiesSet();
+            }
+
+            // bean 的后处理扩展
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
+                beanPostProcessor.postProcessBeforeInitialization(beanName, bean);
+                beanPostProcessor.postProcessAfterInitialization(beanName, bean);
             }
 
         } catch (Exception e) {

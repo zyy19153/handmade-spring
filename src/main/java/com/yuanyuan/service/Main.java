@@ -18,7 +18,14 @@ public class Main {
         System.out.println(user2);
         System.out.println(user.getBeanName());
 
+
+
         user.test();
         user.test();
+
+        MyBeanPostProcessor mpp = (MyBeanPostProcessor) context.getBean("myBeanPostProcessor");
+        MyBeanPostProcessor mpp1 = (MyBeanPostProcessor) context.getBean("myBeanPostProcessor");
+        System.out.println(mpp);
+        System.out.println(mpp1);
     }
 }
