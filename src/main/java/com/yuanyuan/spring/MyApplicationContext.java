@@ -116,6 +116,11 @@ public class MyApplicationContext {
                 }
             }
 
+            // Aware 回调
+            if (bean instanceof BeanNameAware) {
+                ((BeanNameAware) bean).setBeanName("BeanNameAware worked here!");
+            }
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

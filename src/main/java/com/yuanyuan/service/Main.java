@@ -12,10 +12,11 @@ public class Main {
             e.printStackTrace();
         }
         // 单例例子
-        UserService user = (UserService) context.getBean("user");
-        UserService user2 = (UserService) context.getBean("user");
+        UserService user = (UserService) context.getBean("userService");
+        UserService user2 = (UserService) context.getBean("userService");
         System.out.println(user);
         System.out.println(user2);
+        System.out.println(user.getBeanName());
 
         user.test();
         user.test();
