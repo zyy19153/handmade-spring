@@ -55,7 +55,7 @@ public class MyApplicationContext {
                     javaClassPath = javaClassPath.substring(javaClassPath.indexOf("com"), javaClassPath.indexOf(".class"));
                     javaClassPath = javaClassPath.replace("\\", ".");
 
-                    System.out.println("javaClassPath = " + javaClassPath);
+//                    System.out.println("javaClassPath = " + javaClassPath);
 
                     // 到这一步，我们成功获取了 com.yuanyuan.service 包下的所有类，后续的操作都基于此
                     Class<?> clazz = classLoader.loadClass(javaClassPath);
@@ -155,8 +155,8 @@ public class MyApplicationContext {
 
             // bean 的后处理扩展
             for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
-                beanPostProcessor.postProcessBeforeInitialization(beanName, bean);
-                beanPostProcessor.postProcessAfterInitialization(beanName, bean);
+//                bean = beanPostProcessor.postProcessBeforeInitialization(beanName, bean);
+                bean = beanPostProcessor.postProcessAfterInitialization(beanName, bean);
             }
 
         } catch (Exception e) {

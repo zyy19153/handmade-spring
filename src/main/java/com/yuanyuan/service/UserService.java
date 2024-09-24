@@ -5,7 +5,7 @@ import com.yuanyuan.spring.*;
 
 @Component()
 @Scope(ScopeEnum.SINGLETON)
-public class UserService implements BeanNameAware, InitializingBean {
+public class UserService implements BeanNameAware, InitializingBean, UserInterface {
 
     @Autowired
     private OtherService otherService;
