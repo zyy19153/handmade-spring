@@ -116,9 +116,19 @@ public class MyApplicationContext {
                 }
             }
 
+            /*
+             Aware 是一种回调机制，spring 会告诉某个东西给被回调的 bean
+             而 InitializingBean 作用是初始化，具体 afterPropertiesSet 会做什么，spring 不关心
+             */
+
             // Aware 回调
             if (bean instanceof BeanNameAware) {
                 ((BeanNameAware) bean).setBeanName("BeanNameAware worked here!");
+            }
+
+            // 初始化阶段
+            if (bean instanceof InitializingBean) {
+                ((InitializingBean) bean).afterPropertiesSet();
             }
 
         } catch (Exception e) {
